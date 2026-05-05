@@ -212,6 +212,27 @@ const useLogin = () => {
                                 router.replace('/')
                             }
                         } else {
+                            const legacyPassword = profile.email ? `MTOKEN_${profile.email}_CBT` : ''
+                            const legacyEncryptedPassword = legacyPassword ? await encrypt(legacyPassword) : ''
+                            const legacyLoginData = legacyEncryptedPassword
+                                ? await UserStore.login(
+                                      {
+                                          email: profile.email,
+                                          password: legacyEncryptedPassword,
+                                      },
+                                      true,
+                                  )
+                                : null
+
+                            if (legacyLoginData?.statusCode === 1) {
+                                if (!UserStore.userInfo.isAcceptPolicy || UserStore.userInfo.isAcceptPDPA === null) {
+                                    await LayoutStore.setOpenPolicyDialog(true)
+                                } else {
+                                    router.replace('/')
+                                }
+                                return
+                            }
+
                             router.replace({
                                 pathname: '/register',
                                 query: { 
