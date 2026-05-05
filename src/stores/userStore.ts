@@ -9,6 +9,7 @@ export type RegisterType = {
     firstName: string
     lastName: string
     password: string | null
+    mobile?: string
     social?: string | 'google' | 'facebook'
     facebookID?: string
     facebookName?: string
@@ -125,6 +126,12 @@ class userStore {
     @action login = async (params: LoginType, rememberMe: boolean) => {
         const result: LoginResponseType = await fetchPost({ url: apiConfig.user.authentication.login, data: params })
 
+        this.applyLoginResult(result, rememberMe)
+
+        return result
+    }
+
+    @action applyLoginResult = (result: LoginResponseType, rememberMe: boolean) => {
         if (result.statusCode === 1) {
             this.setUserInfo(result.data)
 
@@ -147,8 +154,6 @@ class userStore {
             sessionStorage.setItem(process.env.NEXT_PUBLIC_ACCESS_TOKEN, encryptedAccessToken)
             sessionStorage.setItem(process.env.NEXT_PUBLIC_REFRESH_TOKEN, encryptedRefreshToken)
         }
-
-        return result
     }
 
     @action getProfile = async (params: getProfileType) => {

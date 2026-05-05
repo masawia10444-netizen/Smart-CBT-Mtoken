@@ -13,6 +13,7 @@ type RegisterFormType = {
     email: string
     firstName: string
     lastName: string
+    mobile?: string
     password: string
 }
 type ValuesDialogFormAcceptPolicyType = {
@@ -32,18 +33,18 @@ const useRegister = ({}) => {
             const encryptedPassword = await encrypt(params.password)
 
             const isMTokenFlow = router.query.mtoken_flow === '1'
-            const citizenId = router.query.citizenId as string || ''
-            const userId = router.query.userId as string || ''
+            const mtokenSocialID = params.email || params.mobile || `${params.firstName}_${params.lastName}`
 
             const registerData = await UserStore.register({
                 email: params.email,
                 firstName: params.firstName,
                 lastName: params.lastName,
+                mobile: params.mobile,
                 password: encryptedPassword,
                 isAcceptPDPA: LayoutStore.isAcceptPDPA,
                 isAcceptPDPA2: LayoutStore.isAcceptPDPA2,
                 social: isMTokenFlow ? 'google' : undefined, 
-                googleID: isMTokenFlow ? (citizenId || userId || `MTOKEN_${params.email}`) : undefined,
+                googleID: isMTokenFlow ? `MTOKEN_${mtokenSocialID}` : undefined,
                 googleName: isMTokenFlow ? `${params.firstName} ${params.lastName}` : undefined,
             })
 

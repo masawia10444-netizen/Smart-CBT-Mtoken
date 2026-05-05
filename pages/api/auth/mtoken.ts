@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 export type MTokenProfile = {
-    userId?: string;
-    citizenId?: string;
     firstName?: string;
     lastName?: string;
     dateOfBirthString?: string;
@@ -11,9 +9,96 @@ export type MTokenProfile = {
     notification?: boolean;
 };
 
+type MTokenMatchField = "email" | "mobile" | "fullName";
+
+type MTokenLookupMatch = {
+    field: MTokenMatchField;
+    value?: string;
+    firstName?: string;
+    lastName?: string;
+};
+
 // Helper to get environment variables safely
 function getEnv(name: string) {
     return process.env[name] || '';
+}
+
+function normalizeText(value?: string) {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeMobile(value?: string) {
+    return normalizeText(value).replace(/[^\d+]/g, "");
+}
+
+function getMatchCandidates(profile: MTokenProfile): MTokenLookupMatch[] {
+    const email = normalizeText(profile.email).toLowerCase();
+    const mobile = normalizeMobile(profile.mobile);
+    const firstName = normalizeText(profile.firstName);
+    const lastName = normalizeText(profile.lastName);
+
+    return [
+        email && { field: "email" as const, value: email },
+        mobile && { field: "mobile" as const, value: mobile },
+        firstName && lastName && { field: "fullName" as const, firstName, lastName },
+    ].filter(Boolean) as MTokenLookupMatch[];
+}
+
+function isLoginResponse(payload: any) {
+    return payload?.statusCode === 1 && payload?.data?.accessToken && payload?.data?.refreshToken;
+}
+
+async function lookupMTokenUser(profile: MTokenProfile) {
+    const lookupUrl = getEnv("MTOKEN_USER_LOOKUP_API_URL");
+    const candidates = getMatchCandidates(profile);
+
+    if (!lookupUrl || candidates.length === 0) {
+        return {
+            attempted: false,
+            matched: false,
+            match: null,
+            loginData: null,
+        };
+    }
+
+    for (const candidate of candidates) {
+        const response = await fetch(lookupUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                matchField: candidate.field,
+                matchValue: candidate.value,
+                firstName: candidate.firstName,
+                lastName: candidate.lastName,
+                profile,
+            }),
+        });
+
+        const raw = await response.text();
+        let payload: any = null;
+        try {
+            payload = JSON.parse(raw);
+        } catch { }
+
+        const loginData = payload?.loginData || payload;
+        if (response.ok && isLoginResponse(loginData)) {
+            return {
+                attempted: true,
+                matched: true,
+                match: candidate,
+                loginData,
+            };
+        }
+    }
+
+    return {
+        attempted: true,
+        matched: false,
+        match: null,
+        loginData: null,
+    };
 }
 
 async function fetchMTokenAuthToken() {
@@ -78,13 +163,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
             
             profile = {
-                userId: mockResult.userId || mockResult.UserId || `mock-user-${Date.now()}`,
-                citizenId: mockResult.citizenId || mockResult.CitizenId,
                 firstName: mockResult.firstName || mockResult.FirstName || 'ชาวบ้าน',
                 lastName: mockResult.lastName || mockResult.LastName || 'ใจดี',
                 dateOfBirthString: mockResult.dateOfBirthString || mockResult.DateOfBirthString,
-                mobile: mockResult.mobile || mockResult.Mobile || mockResult.telephone || mockResult.phoneNumber || '0888888888',
-                email: mockResult.email || mockResult.Email || 'mock@example.com',
+                mobile: mockResult.mobile || mockResult.Mobile || mockResult.telephone || mockResult.phoneNumber,
+                email: mockResult.email || mockResult.Email,
                 notification: mockResult.notification !== undefined ? mockResult.notification : true,
             };
         } else {
@@ -117,11 +200,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             const result = payload.result;
-            console.log("[MToken Bridge] Profile retrieved successfully for userId:", result.userId || result.UserId);
+            console.log("[MToken Bridge] Profile retrieved successfully");
 
             profile = {
-                userId: result.userId || result.UserId || result.user_id || result.UserID,
-                citizenId: result.citizenId || result.CitizenId || result.citizen_id || result.CitizenID,
                 firstName: result.firstName || result.FirstName || result.first_name || result.Firstname,
                 lastName: result.lastName || result.LastName || result.last_name || result.Lastname,
                 dateOfBirthString: result.dateOfBirthString || result.DateOfBirthString || result.birthday || result.BirthDate,
@@ -131,11 +212,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             };
         }
 
-        // Return the profile to the frontend
-        // The frontend will then decide whether to login or register
+        const lookupResult = await lookupMTokenUser(profile);
+
         return res.status(200).json({ 
             success: true, 
-            profile 
+            profile,
+            lookup: {
+                attempted: lookupResult.attempted,
+                matched: lookupResult.matched,
+                match: lookupResult.match,
+            },
+            loginData: lookupResult.loginData,
         });
 
     } catch (error: any) {

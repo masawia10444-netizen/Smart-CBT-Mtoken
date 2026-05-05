@@ -201,16 +201,11 @@ const useLogin = () => {
 
                     if (result.success) {
                         const profile = result.profile
-                        const stablePassword = `MTOKEN_${profile.citizenId || profile.email}_CBT`
-                        
-                        const encryptedPassword = await encrypt(stablePassword)
-                        
-                        const loginData = await UserStore.login({ 
-                            email: profile.email, 
-                            password: encryptedPassword 
-                        }, true)
+                        const loginData = result.loginData
 
-                        if (loginData.statusCode === 1) {
+                        if (loginData?.statusCode === 1) {
+                            await UserStore.applyLoginResult(loginData, true)
+
                             if (!UserStore.userInfo.isAcceptPolicy || UserStore.userInfo.isAcceptPDPA === null) {
                                 await LayoutStore.setOpenPolicyDialog(true)
                             } else {
@@ -224,9 +219,7 @@ const useLogin = () => {
                                     email: profile.email,
                                     firstName: profile.firstName,
                                     lastName: profile.lastName,
-                                    citizenId: profile.citizenId || profile.userId, // Use userId as fallback for citizenId
-                                    userId: profile.userId, 
-                                    stablePassword
+                                    mobile: profile.mobile,
                                 }
                             })
                         }

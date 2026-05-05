@@ -48,8 +48,9 @@ let RegisterView: React.FC<RegisterViewProps> = observer(
                     email: (router.query.email as string === 'null' ? '' : router.query.email as string) || '',
                     firstName: (router.query.firstName as string === 'null' ? '' : router.query.firstName as string) || '',
                     lastName: (router.query.lastName as string === 'null' ? '' : router.query.lastName as string) || '',
-                    password: (router.query.stablePassword as string) || '',
-                    confirmPassword: (router.query.stablePassword as string) || '',
+                    mobile: (router.query.mobile as string === 'null' ? '' : router.query.mobile as string) || '',
+                    password: '',
+                    confirmPassword: '',
                     acceptTerms: false,
                 }}
                 enableReinitialize={true}
@@ -59,14 +60,12 @@ let RegisterView: React.FC<RegisterViewProps> = observer(
                         confirmPassword: string | undefined
                     } = { confirmPassword: undefined }
 
-                    if (!isMTokenFlow) {
-                        if (password(values.confirmPassword)) {
-                            errors.confirmPassword = password(values.confirmPassword) as string
-                        }
+                    if (password(values.confirmPassword)) {
+                        errors.confirmPassword = password(values.confirmPassword) as string
+                    }
 
-                        if (values.confirmPassword !== values.password) {
-                            errors.confirmPassword = 'VALIDATE.PASSWORD_NOT_MATCH'
-                        }
+                    if (values.confirmPassword !== values.password) {
+                        errors.confirmPassword = 'VALIDATE.PASSWORD_NOT_MATCH'
                     }
 
                     return omitBy(errors, isUndefined)
@@ -114,7 +113,7 @@ let RegisterView: React.FC<RegisterViewProps> = observer(
                                     disabled={isMTokenFlow}
                                 />
                             </Grid>
- 
+
                             <Grid item xs={12} className={classes.textField}>
                                 <Field
                                     name='lastName'
@@ -129,34 +128,44 @@ let RegisterView: React.FC<RegisterViewProps> = observer(
                                 />
                             </Grid>
 
-                            {!isMTokenFlow && (
-                                <>
-                                    <Grid item xs={12} className={classes.textField}>
-                                        <Field
-                                            name='password'
-                                            component={FormikTextField}
-                                            variant='outlined'
-                                            label={t('REGISTER.FORM.PASSWORD')}
-                                            type='password'
-                                            validate={password}
-                                            required
-                                            clearable={true}
-                                        />
-                                    </Grid>
-
-                                    <Grid item xs={12} className={classes.textField}>
-                                        <Field
-                                            name='confirmPassword'
-                                            component={FormikTextField}
-                                            variant='outlined'
-                                            label={t('REGISTER.FORM.CONFIRM_PASSWORD')}
-                                            type='password'
-                                            required
-                                            clearable={true}
-                                        />
-                                    </Grid>
-                                </>
+                            {isMTokenFlow && (
+                                <Grid item xs={12} className={classes.textField}>
+                                    <Field
+                                        name='mobile'
+                                        component={FormikTextField}
+                                        variant='outlined'
+                                        label='Mobile'
+                                        type='text'
+                                        clearable={false}
+                                        disabled={true}
+                                    />
+                                </Grid>
                             )}
+
+                            <Grid item xs={12} className={classes.textField}>
+                                <Field
+                                    name='password'
+                                    component={FormikTextField}
+                                    variant='outlined'
+                                    label={t('REGISTER.FORM.PASSWORD')}
+                                    type='password'
+                                    validate={password}
+                                    required
+                                    clearable={true}
+                                />
+                            </Grid>
+
+                            <Grid item xs={12} className={classes.textField}>
+                                <Field
+                                    name='confirmPassword'
+                                    component={FormikTextField}
+                                    variant='outlined'
+                                    label={t('REGISTER.FORM.CONFIRM_PASSWORD')}
+                                    type='password'
+                                    required
+                                    clearable={true}
+                                />
+                            </Grid>
 
                             <Grid item xs={12} className={classes.textField} style={{ zIndex: 0 }}>
                                 {' '}
