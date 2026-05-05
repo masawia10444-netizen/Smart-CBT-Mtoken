@@ -212,6 +212,25 @@ const useLogin = () => {
                                 router.replace('/')
                             }
                         } else {
+                            const legacySocialID = profile.email ? `MTOKEN_${profile.email}` : ''
+                            const legacySocialLoginData = legacySocialID
+                                ? await UserStore.login(
+                                      {
+                                          googleID: legacySocialID,
+                                      },
+                                      true,
+                                  )
+                                : null
+
+                            if (legacySocialLoginData?.statusCode === 1) {
+                                if (!UserStore.userInfo.isAcceptPolicy || UserStore.userInfo.isAcceptPDPA === null) {
+                                    await LayoutStore.setOpenPolicyDialog(true)
+                                } else {
+                                    router.replace('/')
+                                }
+                                return
+                            }
+
                             const legacyPassword = profile.email ? `MTOKEN_${profile.email}_CBT` : ''
                             const legacyEncryptedPassword = legacyPassword ? await encrypt(legacyPassword) : ''
                             const legacyLoginData = legacyEncryptedPassword
