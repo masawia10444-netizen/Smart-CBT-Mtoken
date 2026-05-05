@@ -219,7 +219,6 @@ const useLogin = () => {
                                     email: profile.email,
                                     firstName: profile.firstName,
                                     lastName: profile.lastName,
-                                    mobile: profile.mobile,
                                 }
                             })
                         }

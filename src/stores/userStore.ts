@@ -9,7 +9,6 @@ export type RegisterType = {
     firstName: string
     lastName: string
     password: string | null
-    mobile?: string
     social?: string | 'google' | 'facebook'
     facebookID?: string
     facebookName?: string

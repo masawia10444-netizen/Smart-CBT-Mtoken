@@ -4,12 +4,11 @@ export type MTokenProfile = {
     firstName?: string;
     lastName?: string;
     dateOfBirthString?: string;
-    mobile?: string;
     email?: string;
     notification?: boolean;
 };
 
-type MTokenMatchField = "email" | "mobile" | "fullName";
+type MTokenMatchField = "email" | "fullName";
 
 type MTokenLookupMatch = {
     field: MTokenMatchField;
@@ -27,19 +26,13 @@ function normalizeText(value?: string) {
     return typeof value === "string" ? value.trim() : "";
 }
 
-function normalizeMobile(value?: string) {
-    return normalizeText(value).replace(/[^\d+]/g, "");
-}
-
 function getMatchCandidates(profile: MTokenProfile): MTokenLookupMatch[] {
     const email = normalizeText(profile.email).toLowerCase();
-    const mobile = normalizeMobile(profile.mobile);
     const firstName = normalizeText(profile.firstName);
     const lastName = normalizeText(profile.lastName);
 
     return [
         email && { field: "email" as const, value: email },
-        mobile && { field: "mobile" as const, value: mobile },
         firstName && lastName && { field: "fullName" as const, firstName, lastName },
     ].filter(Boolean) as MTokenLookupMatch[];
 }
@@ -166,7 +159,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 firstName: mockResult.firstName || mockResult.FirstName || 'ชาวบ้าน',
                 lastName: mockResult.lastName || mockResult.LastName || 'ใจดี',
                 dateOfBirthString: mockResult.dateOfBirthString || mockResult.DateOfBirthString,
-                mobile: mockResult.mobile || mockResult.Mobile || mockResult.telephone || mockResult.phoneNumber,
                 email: mockResult.email || mockResult.Email,
                 notification: mockResult.notification !== undefined ? mockResult.notification : true,
             };
@@ -206,7 +198,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 firstName: result.firstName || result.FirstName || result.first_name || result.Firstname,
                 lastName: result.lastName || result.LastName || result.last_name || result.Lastname,
                 dateOfBirthString: result.dateOfBirthString || result.DateOfBirthString || result.birthday || result.BirthDate,
-                mobile: result.mobile || result.Mobile || result.telephone || result.phoneNumber || result.phone_number || result.MobileNo,
                 email: result.email || result.Email || result.email_address || result.EmailAddress || result.Mail,
                 notification: result.notification !== undefined ? result.notification : (result.Notification !== undefined ? result.Notification : true)
             };

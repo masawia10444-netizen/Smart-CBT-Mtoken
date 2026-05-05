@@ -48,7 +48,6 @@ let RegisterView: React.FC<RegisterViewProps> = observer(
                     email: (router.query.email as string === 'null' ? '' : router.query.email as string) || '',
                     firstName: (router.query.firstName as string === 'null' ? '' : router.query.firstName as string) || '',
                     lastName: (router.query.lastName as string === 'null' ? '' : router.query.lastName as string) || '',
-                    mobile: (router.query.mobile as string === 'null' ? '' : router.query.mobile as string) || '',
                     password: '',
                     confirmPassword: '',
                     acceptTerms: false,
@@ -127,20 +126,6 @@ let RegisterView: React.FC<RegisterViewProps> = observer(
                                     disabled={isMTokenFlow}
                                 />
                             </Grid>
-
-                            {isMTokenFlow && (
-                                <Grid item xs={12} className={classes.textField}>
-                                    <Field
-                                        name='mobile'
-                                        component={FormikTextField}
-                                        variant='outlined'
-                                        label='Mobile'
-                                        type='text'
-                                        clearable={false}
-                                        disabled={true}
-                                    />
-                                </Grid>
-                            )}
 
                             <Grid item xs={12} className={classes.textField}>
                                 <Field
