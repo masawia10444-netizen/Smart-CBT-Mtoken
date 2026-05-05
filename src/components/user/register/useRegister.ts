@@ -59,10 +59,26 @@ const useRegister = ({}) => {
                     if (loginData.statusCode === 1) {
                         router.replace('/')
                         return
-                    } else {
-                        router.replace('/login')
+                    }
+
+                    const socialLoginData = await UserStore.login(
+                        {
+                            googleID: `MTOKEN_${mtokenSocialID}`,
+                        },
+                        true,
+                    )
+
+                    if (socialLoginData.statusCode === 1) {
+                        router.replace('/')
                         return
                     }
+
+                    openDialogConfirmation({
+                        title: t('PROFILE.ERROR_SYSTEM_MAIN_TEXT'),
+                        message: loginData.message || socialLoginData.message || t('PROFILE.ERROR_SYSTEM_MINOR_TEXT'),
+                        showButtonCancel: false,
+                    })
+                    return
                 }
 
                 // Normal Flow or MToken Login Fail (Show Success Dialog)
