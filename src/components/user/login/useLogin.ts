@@ -192,7 +192,8 @@ const useLogin = () => {
                         window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl)
                     }
 
-                    const response = await fetch('/webapp/api/auth/mtoken', {
+                    const apiBasePath = ((router as any).basePath || '').replace(/\/$/, '')
+                    const response = await fetch(`${apiBasePath}/api/auth/mtoken`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ mToken, appId })

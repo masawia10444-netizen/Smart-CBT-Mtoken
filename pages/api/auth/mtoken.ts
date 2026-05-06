@@ -1,3 +1,4 @@
+import fetch from 'isomorphic-unfetch';
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 export type MTokenProfile = {
